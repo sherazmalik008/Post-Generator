@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMDB Movie/Series Post Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --main-color: #b30000;
+            --dark-bg: #222;
+            --text-light: #fff;
+            --bg-light: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: var(--text-light);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            /* padding: 20px; */
+        }
+        
+        .container {
+            max-width: 1200px;
+            /* margin: 0 auto;
+            padding: 20px; */
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0 40px;
+        }
+        
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            color: var(--main-color);
+            text-shadow: 0 0 15px rgba(179, 0, 0, 0.5);
+        }
+        
+        header p {
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        .form-section {
+            background: var(--dark-bg);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+            color: var(--main-color);
+            font-size: 1.6rem;
+        }
+        
+        .section-title i {
+            font-size: 1.8rem;
+        }
+
+        .search-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .search-section select, 
+        .search-section input {
+            padding: 16px 20px;
+            border-radius: 10px;
+            background: var(--bg-light);
+            color: var(--text-light);
+            border: 1px solid #444;
+            font-size: 1.1rem;
+            min-height: 60px;
+        }
+        
+        .search-section select {
+            min-width: 180px;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+        
+        .search-section input {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .search-btn {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 0 35px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            min-height: 60px;
+        }
+        
+        .search-btn:hover {
+            background: #cc0000;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(179, 0, 0, 0.4);
+        }
+
+        .search-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .result-item {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            transform: scale(0.95);
+            opacity: 0.9;
+        }
+        
+        .result-item:hover {
+            transform: scale(1);
+            opacity: 1;
+            z-index: 2;
+            box-shadow: 0 10px 25px rgba(179, 0, 0, 0.4);
+        }
+
+        .result-item img {
+            width: 100%;
+            /* height: 270px; */
+            object-fit: cover;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .result-item.selected img {
+            border-color: var(--main-color);
+            box-shadow: 0 0 0 4px rgba(179, 0, 0, 0.5);
+        }
+
+        .result-item .title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 15px 10px;
+            font-size: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .download-links-section {
+            background: rgba(42, 42, 42, 0.7);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 35px;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .quality-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .quality-btn {
+            background: var(--bg-light);
+            color: var(--text-light);
+            border: none;
+            padding: 16px;
+            height: 60px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 1.05rem;
+        }
+        
+        .quality-btn:hover {
+            background: var(--main-color);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(179, 0, 0, 0.3);
+        }
+        
+        .download-link {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            background: rgba(30, 30, 30, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .quality-label {
+            min-width: 150px;
+            padding: 16px;
+            background: var(--main-color);
+            color: white;
+            border-radius: 8px;
+            font-weight: 700;
+            text-align: center;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 10px rgba(179, 0, 0, 0.3);
+        }
+        
+        .download-link input {
+            /* flex: 1 1 350px;
+            padding: 16px 20px; */
+            height: 60px;
+            border-radius: 10px;
+            background: var(--dark-bg);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 1.1rem;
+        }
+        
+        .remove-btn {
+            background: transparent;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            padding: 10px 15px;
+            height: 60px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        
+        .remove-btn:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .link-controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .generate-btn {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            height: 60px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(179, 0, 0, 0.3);
+        }
+        
+        .generate-btn:hover {
+            background: #cc0000;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(179, 0, 0, 0.4);
+        }
+
+        .movie-post {
+            background: var(--dark-bg);
+            padding: 35px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .post-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .poster-img {
+            width: 350px;
+            height: 500px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid var(--main-color);
+        }
+
+        .movie-details {
+            flex: 1;
+            /* min-width: 350px; */
+        }
+
+        .movie-title {
+            margin: 0 0 25px 0;
+            color: var(--text-light);
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.1;
+            text-shadow: 0 0 10px rgba(179, 0, 0, 0.5);
+        }
+
+        .meta-info {
+            color: #bbb;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            font-size: 1.1rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(50, 50, 50, 0.5);
+            padding: 10px 20px;
+            border-radius: 30px;
+        }
+
+        .genre-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .genre-item {
+            background: var(--main-color);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(179, 0, 0, 0.3);
+        }
+
+        .cast-crew {
+            margin-bottom: 30px;
+        }
+
+        .cast-crew h3 {
+            color: var(--main-color);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cast-section {
+            margin: 30px 0;
+        }
+
+        .cast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .cast-member {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .cast-member:hover {
+            transform: translateY(-5px);
+        }
+
+        .cast-member img {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--main-color);
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .cast-member .name {
+            margin-top: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .cast-member .character {
+            font-size: 1rem;
+            color: #bbb;
+            font-style: italic;
+        }
+
+        .additional-info {
+            background: rgba(42, 42, 42, 0.7);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            padding: 20px;
+            background: rgba(30, 30, 30, 0.7);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .info-item h4 {
+            color: var(--main-color);
+            margin: 0 0 15px 0;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-item p {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .production-companies {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .company-logo {
+            max-width: 150px;
+            max-height: 80px;
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            object-fit: contain;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .keywords-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .keyword-item {
+            background: rgba(179, 0, 0, 0.3);
+            color: #ff8a8a;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            border: 1px solid rgba(179, 0, 0, 0.4);
+            font-weight: 500;
+        }
+
+        .download-section {
+            background: rgba(42, 42, 42, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 40px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .download-button {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-decoration: none;
+            margin: 15px;
+            box-shadow: 0 8px 20px rgba(179, 0, 0, 0.4);
+        }
+
+        .download-button:hover {
+            background: #cc0000;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(179, 0, 0, 0.5);
+        }
+        
+        .how-to-btn {
+            background: #4a4a4a;
+        }
+        
+        .how-to-btn:hover {
+            background: #5a5a5a;
+        }
+
+        .download-links {
+            list-style: none;
+            padding: 0;
+            margin: 30px 0 0;
+        }
+
+        .download-links li {
+            background: rgba(30, 30, 30, 0.8);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .download-links li:hover {
+            background: rgba(179, 0, 0, 0.2);
+            transform: translateX(10px);
+            border-color: var(--main-color);
+        }
+
+        .download-links li a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 1.2rem;
+        }
+
+        .crew-sections {
+            margin: 30px 0;
+        }
+
+        .crew-category {
+            margin-bottom: 40px;
+        }
+
+        .crew-category h4 {
+            color: var(--main-color);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .crew-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .crew-member {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .crew-member:hover {
+            transform: translateY(-5px);
+        }
+
+        .crew-member img {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--main-color);
+            margin-bottom: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .crew-member .name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .crew-member .job {
+            font-size: 1rem;
+            color: #bbb;
+            font-style: italic;
+        }
+        
+        .copy-section {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .copy-btn {
+            background: var(--main-color);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 8px 20px rgba(179, 0, 0, 0.4);
+        }
+        
+        .copy-btn:hover {
+            background: #cc0000;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(179, 0, 0, 0.5);
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(30, 30, 30, 0.95);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-weight: 600;
+            font-size: 1.2rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s ease;
+            border-left: 5px solid var(--main-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 5px solid var(--main-color);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loader p {
+            font-size: 1.3rem;
+            font-weight: 500;
+        }
+
+        @media (max-width: 992px) {
+            .post-header {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .poster-img {
+                width: 100%;
+                max-width: 400px;
+                /* margin: 0 auto; */
+            }
+            
+            .movie-title {
+                font-size: 2.4rem;
+            }
+            
+            .cast-grid, .crew-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 25px;
+            }
+            
+            .cast-member img, .crew-member img {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .form-section {
+                padding: 25px;
+            }
+            
+            .search-section {
+                flex-direction: column;
+            }
+            
+            .search-section select, 
+            .search-section input,
+            .search-btn {
+                width: 100%;
+            }
+            
+            .movie-title {
+                font-size: 2rem;
+            }
+            
+            .cast-grid, .crew-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 20px;
+            }
+            
+            .cast-member img, .crew-member img {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .download-button, .copy-btn {
+                width: 100%;
+                max-width: 400px;
+                margin: 10px 0;
+            }
+            
+            .quality-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .download-link {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .quality-label {
+                width: 100%;
+                margin-bottom: 15px;
+            }
+            
+            .link-controls {
+                flex-direction: column;
+            }
+            
+            .link-controls button {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.4rem;
+            }
+            
+            .movie-title {
+                font-size: 1.6rem;
+            }
+            
+            .meta-info {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .cast-grid, .crew-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .download-button, .copy-btn {
+                font-size: 1.1rem;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-film"></i>Post Generator</h1>
+            <p>Create professional movie and TV series posts with download links</p>
+        </header>
+        
+        <!-- Search Section -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <i class="fas fa-search"></i> 
+                <span>Find Content</span>
+            </h2>
+            
+            <div class="search-section">
+                <select id="contentType">
+                    <option value="movie">Movie</option>
+                    <option value="tv">TV Series</option>
+                </select>
+                <input type="text" id="searchQuery" placeholder="Search for a movie or TV series...">
+                <button class="search-btn" onclick="searchContent()">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+            
+            <div class="loader" id="searchLoader">
+                <div class="spinner"></div>
+                <p>Searching From Database...</p>
+            </div>
+            
+            <!-- Search Results -->
+            <div id="searchResults" class="search-results"></div>
+
+            <!-- Download Links Section -->
+            <div id="downloadLinksSection" class="download-links-section">
+                <h2 class="section-title">
+                    <i class="fas fa-download"></i> 
+                    <span>Add Download Links</span>
+                </h2>
+                
+                <div class="quality-buttons">
+                    <button class="quality-btn" onclick="addQualityLink('4K')"><i class="fas fa-hd"></i> 4K</button>
+                    <button class="quality-btn" onclick="addQualityLink('1080p')"><i class="fas fa-film"></i> 1080p</button>
+                    <button class="quality-btn" onclick="addQualityLink('720p')"><i class="fas fa-video"></i> 720p</button>
+                    <button class="quality-btn" onclick="addQualityLink('720p HECV')"><i class="fas fa-video"></i> 720p HECV</button>
+                    <button class="quality-btn" onclick="addQualityLink('480p')"><i class="fas fa-mobile-alt"></i> 480p</button>  
+                    <button class="quality-btn" onclick="addQualityLink('4K Combined')"><i class="fas fa-hd"></i> 4K Combined</button>
+                     <button class="quality-btn" onclick="addQualityLink('1080p Combined')"><i class="fas fa-film"></i> 1080p Combined</button>
+                     <button class="quality-btn" onclick="addQualityLink('720p Combined')"><i class="fas fa-video"></i> 720p Combined</button>
+                     <button class="quality-btn" onclick="addQualityLink('480p Combined')"><i class="fas fa-mobile-alt"></i> 480p Combined</button>
+                    <button class="quality-btn" onclick="addEpisodeLink()"><i class="fas fa-list-ol"></i> Episode</button>
+                    <button class="quality-btn" onclick="addCustomLink()"><i class="fas fa-plus-circle"></i> Custom</button>
+                </div>
+                
+                <div id="downloadLinksContainer">
+                    <!-- Download links will be added here -->
+                </div>
+                
+                <div class="link-controls">
+                    <button class="generate-btn" onclick="generatePost()">
+                        <i class="fas fa-magic"></i> Generate Post
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="form-section">
+            <h2 class="section-title">
+                <i class="fas fa-eye"></i> 
+                <span>Generated Post Preview</span>
+            </h2>
+            
+            <div class="loader" id="previewLoader" style="display: none;">
+                <div class="spinner"></div>
+                <p>Generating your movie post...</p>
+            </div>
+            
+            <div id="postPreview"></div>
+            
+            <div class="copy-section">
+                <button class="copy-btn" onclick="copyHTML()">
+                    <i class="fas fa-copy"></i> Copy HTML Code
+                </button>
+            </div>
+        </div>
+
+        <div id="generatedCode" style="display: none;"></div>
+    </div>
+    
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span>HTML code copied to clipboard!</span>
+    </div>
+
+    <script>
+        const TMDB_API_KEY = '67fd24a7091124075a12bcf459258603';
+        const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/';
+        let selectedContent = null;
+        let episodeCounter = 1;
+        
+        // Toast notification function
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Function to search content
+        async function searchContent() {
+            const contentType = document.getElementById('contentType').value;
+            const query = document.getElementById('searchQuery').value;
+            
+            if (!query) {
+                showToast('Please enter a search term');
+                return;
+            }
+
+            // Show loader
+            const loader = document.getElementById('searchLoader');
+            loader.style.display = 'block';
+            
+            const searchUrl = `https://api.themoviedb.org/3/search/${contentType}?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`;
+
+            try {
+                const response = await fetch(searchUrl);
+                const data = await response.json();
+                
+                if (data.results.length === 0) {
+                    showToast('No results found');
+                    loader.style.display = 'none';
+                    return;
+                }
+                
+                displaySearchResults(data.results, contentType);
+                loader.style.display = 'none';
+            } catch (error) {
+                console.error('Search error:', error);
+                showToast('Error searching. Please try again.');
+                loader.style.display = 'none';
+            }
+        }
+
+        // Function to display search results
+        function displaySearchResults(results, contentType) {
+            const container = document.getElementById('searchResults');
+            container.innerHTML = '';
+
+            results.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'result-item';
+                div.onclick = () => selectContent(item, contentType);
+
+                const posterPath = item.poster_path 
+                    ? TMDB_IMAGE_BASE_URL + 'w342' + item.poster_path
+                    : 'https://via.placeholder.com/342x513?text=No+Poster';
+
+                div.innerHTML = `
+                    <img src="${posterPath}" alt="${item.title || item.name}">
+                    <div class="title">${item.title || item.name}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Function to select content
+        async function selectContent(item, contentType) {
+            document.querySelectorAll('.result-item').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Show loader
+            const loader = document.getElementById('searchLoader');
+            loader.style.display = 'block';
+            
+            const detailsUrl = `https://api.themoviedb.org/3/${contentType}/${item.id}?api_key=${TMDB_API_KEY}&append_to_response=credits,keywords`;
+            
+            try {
+                const response = await fetch(detailsUrl);
+                const details = await response.json();
+                
+                selectedContent = {
+                    ...details,
+                    contentType,
+                    posterPath: details.poster_path 
+                        ? TMDB_IMAGE_BASE_URL + 'original' + details.poster_path 
+                        : 'https://via.placeholder.com/500x750?text=No+Poster',
+                    keywords: details.keywords ? details.keywords.keywords || details.keywords.results : []
+                };
+                
+                document.getElementById('downloadLinksSection').style.display = 'block';
+                loader.style.display = 'none';
+                
+                // Reset episode counter for new content
+                episodeCounter = 1;
+                
+                // Scroll to download section
+                document.getElementById('downloadLinksSection').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                console.error('Error fetching details:', error);
+                showToast('Error fetching details. Please try again.');
+                loader.style.display = 'none';
+            }
+        }
+
+        // Function to add a quality link
+        function addQualityLink(quality) {
+            const container = document.getElementById('downloadLinksContainer');
+            const linkId = Date.now();
+            
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'download-link';
+            linkDiv.id = `link-${linkId}`;
+            linkDiv.innerHTML = `
+                <div class="quality-label">${quality}</div>
+                <input type="url" class="download-url" placeholder="Paste ${quality} download URL" required>
+                <button class="remove-btn" onclick="removeLink('${linkId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(linkDiv);
+            
+            // Scroll to the new link
+            linkDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Function to add episode links sequentially
+        function addEpisodeLink() {
+            const container = document.getElementById('downloadLinksContainer');
+            const linkId = Date.now();
+            
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'download-link';
+            linkDiv.id = `link-${linkId}`;
+            linkDiv.innerHTML = `
+                <div class="quality-label">Episode ${episodeCounter}</div>
+                <input type="url" class="download-url" placeholder="Paste Episode ${episodeCounter} download URL" required>
+                <button class="remove-btn" onclick="removeLink('${linkId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(linkDiv);
+            
+            // Increment episode counter for next click
+            episodeCounter++;
+            
+            // Scroll to the new link
+            linkDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Function to add a custom link
+        function addCustomLink() {
+            const container = document.getElementById('downloadLinksContainer');
+            const linkId = Date.now();
+            
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'download-link';
+            linkDiv.id = `link-${linkId}`;
+            linkDiv.innerHTML = `
+                <input type="text" class="quality-name" placeholder="Quality (e.g., 4K)" required>
+                <input type="url" class="download-url" placeholder="Paste download URL" required>
+                <button class="remove-btn" onclick="removeLink('${linkId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(linkDiv);
+            
+            // Scroll to the new link
+            linkDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Function to remove a link
+        function removeLink(linkId) {
+            const linkDiv = document.getElementById(`link-${linkId}`);
+            if (linkDiv) {
+                linkDiv.remove();
+            }
+        }
+
+        // Function to generate post
+        function generatePost() {
+            if (!selectedContent) {
+                showToast('Please select a movie or TV series first');
+                return;
+            }
+
+            // Collect all download links
+            const downloadLinks = [];
+            const linkElements = document.querySelectorAll('.download-link');
+            
+            linkElements.forEach(link => {
+                const qualityInput = link.querySelector('.quality-name');
+                const qualityLabel = link.querySelector('.quality-label');
+                const urlInput = link.querySelector('.download-url');
+                
+                if (urlInput && urlInput.value) {
+                    let quality = '';
+                    
+                    if (qualityInput) {
+                        quality = qualityInput.value;
+                    } else if (qualityLabel) {
+                        quality = qualityLabel.textContent;
+                    }
+                    
+                    if (quality && urlInput.value) {
+                        downloadLinks.push({
+                            quality: quality,
+                            url: urlInput.value
+                        });
+                    }
+                }
+            });
+
+            if (downloadLinks.length === 0) {
+                showToast('Please add at least one download link');
+                return;
+            }
+            
+            // Show preview loader
+            const previewLoader = document.getElementById('previewLoader');
+            previewLoader.style.display = 'block';
+            
+            // Delay to show loader
+            setTimeout(() => {
+                const uniqueId = Date.now();
+                const isMovie = selectedContent.contentType === 'movie';
+
+                const genres = selectedContent.genres.map(g => g.name);
+                const directors = selectedContent.credits.crew
+                    .filter(person => person.job === 'Director')
+                    .map(director => director.name);
+                const cast = selectedContent.credits.cast
+                    .slice(0, 5)
+                    .map(actor => actor.name);
+
+                const releaseDate = isMovie ? selectedContent.release_date : selectedContent.first_air_date;
+                const title = isMovie ? selectedContent.title : selectedContent.name;
+                const runtime = isMovie ? selectedContent.runtime : (selectedContent.episode_run_time && selectedContent.episode_run_time[0]) || 'N/A';
+
+                // Format date
+                const formattedDate = releaseDate ? new Date(releaseDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }) : 'Unknown';
+
+                // Format runtime
+                let formattedRuntime = 'N/A';
+                if (runtime && !Array.isArray(runtime)) {
+                    const hours = Math.floor(runtime / 60);
+                    const minutes = runtime % 60;
+                    formattedRuntime = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                }
+                
+                const postHTML = `
+                    <div class="movie-post">
+                        <div class="post-header">
+                            <img src="${selectedContent.posterPath}" alt="${title}" class="poster-img">
+                            <div class="movie-details">
+                                <h1 class="movie-title">${title}</h1>
+                                <div class="meta-info">
+                                    <div class="meta-item">
+                                        <i class="fas fa-calendar-alt"></i> ${formattedDate}
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-clock"></i> ${formattedRuntime}
+                                    </div>
+                                    <div class="meta-item">
+                                        <i class="fas fa-star"></i> ⭐${selectedContent.vote_average.toFixed(1)}/10
+                                    </div>
+                                    ${!isMovie ? `
+                                        <div class="meta-item">
+                                            <i class="fas fa-tv"></i> ${selectedContent.number_of_seasons} Seasons
+                                        </div>
+                                        <div class="meta-item">
+                                            <i class="fas fa-list-ol"></i> ${selectedContent.number_of_episodes} Episodes
+                                        </div>
+                                    ` : ''}
+                                    <div class="meta-item">
+                                        <i class="fas fa-language"></i> ${selectedContent.original_language.toUpperCase()}
+                                    </div>
+                                </div>
+                                
+                                <ul class="genre-list">
+                                    ${genres.map(g => `<li class="genre-item">${g}</li>`).join('')}
+                                </ul>
+
+                                <div class="cast-crew">
+                                    <h3><i class="fas fa-book-open"></i> Overview</h3>
+                                    <p>${selectedContent.overview || 'No overview available.'}</p>
+                                </div>
+
+                                ${selectedContent.tagline ? `
+                                    <div class="cast-crew">
+                                        <h3><i class="fas fa-quote-left"></i> Tagline</h3>
+                                        <p><em>"${selectedContent.tagline}"</em></p>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="cast-section">
+                            <h3><i class="fas fa-users"></i> Top Cast</h3>
+                            <div class="cast-grid">
+                                ${selectedContent.credits.cast.slice(0, 6).map(actor => `
+                                    <div class="cast-member">
+                                        <img src="${actor.profile_path 
+                                            ? TMDB_IMAGE_BASE_URL + 'w342' + actor.profile_path 
+                                            : 'https://via.placeholder.com/342x513?text=No+Image'}" 
+                                            alt="${actor.name}">
+                                        <div class="name">${actor.name}</div>
+                                        <div class="character">${actor.character}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+    
+                        <div class="cast-crew">
+                            <h3><i class="fas fa-user-tie"></i> Crew</h3>
+                            <div class="crew-sections">
+                                ${[
+                                    {role: 'Director', job: 'Director'},
+                                    {role: 'Writer', job: ['Screenplay', 'Writer', 'Story']},
+                                    {role: 'Producer', job: ['Producer', 'Executive Producer']},
+                                    {role: 'Music', job: ['Music', 'Original Music Composer']},
+                                    {role: 'Cinematographer', job: 'Director of Photography'},
+                                    {role: 'Editor', job: 'Editor'}
+                                ].map(crewType => {
+                                    const crewMembers = selectedContent.credits.crew.filter(person => 
+                                        Array.isArray(crewType.job) 
+                                            ? crewType.job.includes(person.job)
+                                            : person.job === crewType.job
+                                    );
+                                    
+                                    return crewMembers.length ? `
+                                        <div class="crew-category">
+                                            <h4><i class="fas fa-${crewType.role === 'Director' ? 'user' : crewType.role === 'Writer' ? 'pen' : crewType.role === 'Producer' ? 'star' : crewType.role === 'Music' ? 'music' : crewType.role === 'Cinematographer' ? 'camera' : 'edit'}"></i> ${crewType.role}</h4>
+                                            <div class="crew-grid">
+                                                ${crewMembers.slice(0, 4).map(person => `
+                                                    <div class="crew-member">
+                                                        <img src="${person.profile_path 
+                                                            ? TMDB_IMAGE_BASE_URL + 'w342' + person.profile_path 
+                                                            : 'https://via.placeholder.com/342x513?text=No+Image'}" 
+                                                            alt="${person.name}">
+                                                        <div class="name">${person.name}</div>
+                                                        <div class="job">${person.job}</div>
+                                                    </div>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    ` : '';
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <div class="cast-crew">
+                            <h3><i class="fas fa-building"></i> Production Companies</h3>
+                            <div class="production-companies">
+                                ${selectedContent.production_companies.map(company => `
+                                    ${company.logo_path ? `
+                                        <img class="company-logo" 
+                                            src="${TMDB_IMAGE_BASE_URL + 'w500' + company.logo_path}" 
+                                            alt="${company.name}"
+                                            title="${company.name}">
+                                    ` : `<span class="company-name">${company.name}</span>`}
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${selectedContent.keywords && selectedContent.keywords.length > 0 ? `
+                            <div class="cast-crew">
+                                <h3><i class="fas fa-tags"></i> Keywords</h3>
+                                <div class="keywords-list">
+                                    ${selectedContent.keywords.slice(0, 15).map(keyword => `
+                                        <span class="keyword-item">${keyword.name}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="download-section">
+                            <button id="getLinkBtn_${uniqueId}" class="download-button" onclick="startTimer_${uniqueId}()">
+                                <i class="fas fa-download"></i> Get Download Links
+                            </button>
+                            <p id="timer_${uniqueId}" style="display: none;"></p>
+                            <h3 id="heading_${uniqueId}" style="display: none;"><i class="fas fa-download"></i> Download Links</h3>
+                            <ul id="downloadLinksList_${uniqueId}" class="download-links" style="display: none;">
+                                ${downloadLinks.map(link => `
+                                    <li><a href="${link.url}" target="_blank"><i class="fas fa-download"></i> ${link.quality}</a></li>
+                                `).join('')}
+                            </ul>
+                            
+                            <!-- How to Download Button -->
+                            <div class="how-to-download">
+                                <a href="https://www.starwala.fun/p/how-to-download.html" target="_blank" class="download-button how-to-btn">
+                                    <i class="fas fa-question-circle"></i> How To Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const fullHTML = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>${title} - Download | TMDB Generator</title>
+                        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+                        <style>
+                            :root {
+                                --main-color: #b30000;
+                                --dark-bg: #222;
+                                --text-light: #fff;
+                                --bg-light: #333;
+                            }
+                            body {
+                                background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+                                color: var(--text-light);
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                
+                            }
+                            ${document.querySelector('style').innerHTML}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            ${postHTML}
+                        </div>
+                        <script>
+                            function startTimer_${uniqueId}() {
+                                const timerElement = document.getElementById('timer_${uniqueId}');
+                                const downloadLinksList = document.getElementById('downloadLinksList_${uniqueId}');
+                                const heading = document.getElementById('heading_${uniqueId}');
+                                const getLinkBtn = document.getElementById('getLinkBtn_${uniqueId}');
+                                
+                                getLinkBtn.style.display = 'none';
+                                timerElement.style.display = 'block';
+                                let timeLeft = 15;
+                                
+                                timerElement.textContent = 'Please wait ' + timeLeft + ' seconds for the download links...';
+                                
+                                const interval = setInterval(function() {
+                                    timeLeft--;
+                                    timerElement.textContent = 'Please wait ' + timeLeft + ' seconds for the download links...';
+                                    
+                                    if (timeLeft <= 0) {
+                                        clearInterval(interval);
+                                        timerElement.style.display = 'none';
+                                        downloadLinksList.style.display = 'block';
+                                        heading.style.display = 'block';
+                                    }
+                                }, 1000);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+
+                // Display the content
+                document.getElementById('postPreview').innerHTML = postHTML;
+                document.getElementById('generatedCode').innerHTML = fullHTML;
+                previewLoader.style.display = 'none';
+                
+                // Initialize timer function for preview
+                eval(`
+                    function startTimer_${uniqueId}() {
+                        const timerElement = document.getElementById('timer_${uniqueId}');
+                        const downloadLinksList = document.getElementById('downloadLinksList_${uniqueId}');
+                        const heading = document.getElementById('heading_${uniqueId}');
+                        const getLinkBtn = document.getElementById('getLinkBtn_${uniqueId}');
+                        
+                        getLinkBtn.style.display = 'none';
+                        timerElement.style.display = 'block';
+                        let timeLeft = 15;
+                        
+                        timerElement.textContent = 'Please wait ' + timeLeft + ' seconds for the download links...';
+                        
+                        const interval = setInterval(function() {
+                            timeLeft--;
+                            timerElement.textContent = 'Please wait ' + timeLeft + ' seconds for the download links...';
+                            
+                            if (timeLeft <= 0) {
+                                clearInterval(interval);
+                                timerElement.style.display = 'none';
+                                downloadLinksList.style.display = 'block';
+                                heading.style.display = 'block';
+                                
+                                // Scroll to download links
+                                downloadLinksList.scrollIntoView({ behavior: 'smooth' });
+                            }
+                        }, 1000);
+                    }
+                `);
+                
+                // Scroll to preview
+                document.getElementById('postPreview').scrollIntoView({ behavior: 'smooth' });
+            }, 1000);
+        }
+
+        function copyHTML() {
+            const code = document.getElementById('generatedCode').innerHTML;
+            if (!code) {
+                showToast('Please generate a post first');
+                return;
+            }
+            
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('HTML code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showToast('Failed to copy code. Please try again.');
+            });
+        }
+
+        document.getElementById('searchQuery').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchContent();
+            }
+        });
+    </script>
+</body>
+</html>
